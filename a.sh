@@ -1,0 +1,3 @@
+python main.py --model_id /data/gpfs/projects/punim2243/lotte/model/llama-3.2-3B-awq-4bit/ --quant_method qllm --dataset wikitext2 --seqlen_list 256 512 1024 2048 4096 8192 --use_cached_results
+python main.py --model_id /data/gpfs/projects/punim2243/lotte/model/llama-3.2-3B-awq-3bit/ --quant_method qllm --dataset wikitext2 --seqlen_list 256 512 1024 2048 4096 8192 --use_cached_results
+python main.py --model_id /data/gpfs/projects/punim2243/lotte/model/llama-3.2-3B-awq-2bit/ --quant_method qllm --dataset wikitext2 --seqlen_list 256 512 1024 2048 4096 8192 --use_cached_results
