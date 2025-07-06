@@ -3,7 +3,7 @@ import pandas as pd
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from model_loader import create_results_folder, get_optimal_device, load_model
 from data_utils import get_wikitext2, get_c4
-from evaluation import evaluate_autoregressive, evaluate_strict
+from evaluation import evaluate_autoregressive, evaluate_strict, evaluate_sliding_window
 from plot_utils import plot_memory_and_time, plot_ppl_comparison, plot_acc_comparison
 from utils import init_logging, load_evaluation_results
 import os
@@ -85,11 +85,12 @@ def main():
                 else:
                     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, trust_remote_code=True)
             if args.dataset == "wikitext2":
-                dataloader, testdata = get_wikitext2(args.nsamples, 0, seqlen, args.model_id)
+                testdata = get_wikitext2(args.nsamples, 0, seqlen, args.model_id)
             else:
-                dataloader, testdata = get_c4(args.nsamples, 0, seqlen, args.model_id, args.full_c4)
-            auto_results = evaluate_autoregressive(model, dataloader, device, seqlen)
+                testdata = get_c4(args.nsamples, 0, seqlen, args.model_id, args.full_c4)
+            auto_results = evaluate_autoregressive(model, testdata, tokenizer, device, seqlen)
             strict_ppl, strict_acc = evaluate_strict(model, testdata, tokenizer, device, max_samples=args.nsamples, seqlen=seqlen)
+            sliding_ppl, sliding_acc = evaluate_sliding_window(model, testdata, tokenizer, device, window_size=seqlen, stride=1, max_samples=32)
             results = {
                 'Model': args.model_id,
                 'Quantization': args.quant_method,
@@ -98,8 +99,10 @@ def main():
                 'Sequence Length': seqlen,
                 'Auto PPL': auto_results['PPL'],
                 'Strict PPL': strict_ppl,
+                'Sliding PPL': sliding_ppl,
                 'Auto Accuracy': auto_results['Accuracy'],
                 'Strict Accuracy': strict_acc * 100,
+                'Sliding Accuracy': sliding_acc * 100,
                 'Max Memory (MB)': auto_results['Max Memory (MB)'],
                 'Median Time (s)': auto_results['Median Time (s)']
             }
